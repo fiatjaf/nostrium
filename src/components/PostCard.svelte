@@ -1,21 +1,31 @@
 <script>
-  import { nip19 } from 'nostr-tools';
-  import { link } from "svelte-spa-router";
-  import { state, getRelaysForEvent } from "../store";
-  import Avatar from "./Avatar.svelte";
+  import {nip19} from 'nostr-tools'
+  import {link} from 'svelte-spa-router'
+  import {state, getRelaysForEvent} from '../store'
+  import Avatar from './Avatar.svelte'
 
-  export let post, params;
+  export let post, params
 
-  $: name = $state.profiles.get(post.pubkey)?.name;
-  $: picture = $state.profiles.get(post.pubkey)?.picture;
-  $: date = new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
+  $: name = $state.profiles.get(post.pubkey)?.name
+  $: picture = $state.profiles.get(post.pubkey)?.picture
+  $: date = new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
   }).format(post.created_at * 1000)
   $: npub = nip19.npubEncode(post.pubkey)
   $: relays = getRelaysForEvent(post.id)
-  $: nostrLink = relays.length > 0 ? nip19.nprofileEncode({ pubkey: post.pubkey, relays }) : npub
+  $: nprofile =
+    relays.length > 0
+      ? nip19.nprofileEncode({pubkey: post.pubkey, relays})
+      : npub
+
+  const naddr = nip19.naddrEncode({
+    pubkey: params.author,
+    kind: 30023,
+    identifier: post.d,
+    relays
+  })
 </script>
 
 <article>
@@ -28,8 +38,8 @@
       </a>
     {/if}
     <hgroup>
-      <a href={`/${params.author}/${post.d}`} use:link><h5>{post.title}</h5></a>
-      <a href={`/${params.author}/${post.d}`} use:link><small>{date}</small></a>
+      <a href={`/${naddr}`} use:link><h5>{post.title}</h5></a>
+      <a href={`/${naddr}`} use:link><small>{date}</small></a>
       {#if post.excerpt}
         <p>
           <small>{post.excerpt}</small>
@@ -44,7 +54,7 @@
     {#if name}
       <small>{name}</small>
     {/if}
-    <a class="npub" href={`nostr:${nostrLink}`}>{npub}</a>
+    <a class="npub" href={`nostr:${nprofile}`}>{npub}</a>
   </footer>
 </article>
 

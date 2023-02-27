@@ -1,20 +1,27 @@
 <script>
-  import { onMount } from "svelte";
-  import { link } from "svelte-spa-router";
-  import { state, initAuthor } from "./store";
-  import Avatar from "./components/Avatar.svelte";
-  import Markdown from "./components/Markdown.svelte";
+  import {onMount} from 'svelte'
+  import {link} from 'svelte-spa-router'
+  import {nip19} from 'nostr-tools'
+  import {state, init} from './store'
+  import Avatar from './components/Avatar.svelte'
+  import Markdown from './components/Markdown.svelte'
 
-  export let params;
+  export let d, author, relays
 
-  let post = $state.posts.find((p) => p.d === params.id);
+  let post = $state.posts.find(p => p.d === d)
 
   onMount(() => {
-    if (!post) initAuthor(params)
+    if (!post) init({author, relays, d})
   })
 
   $: profile = $state.profiles?.get(post?.pubkey)
   $: pubkey = post?.pubkey
+  $: npub = pubkey ? nip19.npubEncode(post.pubkey) : null
+  $: nprofile = npub
+    ? relays.length > 0
+      ? nip19.nprofileEncode({pubkey: post.pubkey, relays})
+      : npub
+    : null
 </script>
 
 <div aria-busy={$state.loading}>
@@ -24,18 +31,15 @@
       {#if post.image}
         <section>
           <figure style={`background-image: url(${post.image})`}>
-            <img
-              src={post.image}
-              alt={post.title}
-            />
+            <img src={post.image} alt={post.title} />
           </figure>
         </section>
       {/if}
     </header>
     <Markdown>{post?.content}</Markdown>
   {:else if !$state.loading}
-    <p>Article "{params.id}" not found.</p>
-    <p>Go back to <a href={`/${params.author}`} use:link>{params.author}</a>.</p>
+    <p>Article "{d}" not found.</p>
+    <p>Go back to <a href={`/${nprofile}`} use:link>{npub}</a>.</p>
   {/if}
   <section>
     <footer>

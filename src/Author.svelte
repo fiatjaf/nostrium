@@ -1,20 +1,20 @@
 <script>
-  import { onMount } from "svelte";
-  import { state, initAuthor } from "./store";
-  import PostCard from "./components/PostCard.svelte";
+  import {onMount} from 'svelte'
+  import {state, init} from './store'
+  import PostCard from './components/PostCard.svelte'
 
-  export let params;
+  export let author, relays
   onMount(() => {
-    initAuthor(params)
+    init({author, relays})
   })
 </script>
 
 <div aria-busy={$state.loading}>
   {#if $state.posts.length}
     {#each $state.posts as post}
-      <PostCard {params} {post} />
+      <PostCard {author} {relays} {post} />
     {/each}
   {:else if !$state.loading}
-    <p>No posts found for "{params.author}".</p>
+    <p>No posts found for "{author}".</p>
   {/if}
 </div>
